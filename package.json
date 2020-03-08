@@ -18,6 +18,11 @@
   },
   "homepage": "https://github.com/activenode/forest.js#readme",
   "dependencies": {
-    "@now/node": "^1.4.1"
+    "@now/node": "^1.4.1",
+    "vue": "^2.6.11",
+    "vue-server-renderer": "^2.6.11"
+  },
+  "devDependencies": {
+    "@types/vue": "^2.0.0"
   }
 }
