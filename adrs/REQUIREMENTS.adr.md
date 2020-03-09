@@ -45,7 +45,7 @@ The idea is that every component has a specific app prefix e.g.
 </app-my-component>
 ```
     
-3.2 By that logic we would always be able to infer that `app-my-component` corresponds to component `my-component`. However if we define any of those it would not be isomorphic.
+By that logic we would always be able to infer that `app-my-component` corresponds to component `my-component`. However if we define any of those it would not be isomorphic.
 
 Proof 1 (define `app-my-component`):
 ----
@@ -58,6 +58,22 @@ Proof 2 (define `my-component`):
 
 Defining `Vue.component('my-component', ...)` with the given example from above would do nothing since `my-component` is not existent in the string.
 
+## Why do you even need isomorphism and dont just use Puppeteer?
+
+1. Async rendered components especially those with loading state might leave the headless-browser-rendered one with a corrupt state.
+2. Some Framework need some identification of SSR (e.g. `data-server-rendered=true`). They are not added when CSR is happening. So we would have to postprocess those (theoretically rather easy).
+3. 
+
+If you do use puppeteer for that you could not use `lambda/serverless` since it would always spin up a new chrome which takes too much of time. Instead we would need an idle chrome which just waits to get new html.
+
+Sources:
+- https://developers.google.com/web/tools/puppeteer/articles/ssr
+
+
 ## Solution Finding
 
-tbd
+We showed that we cannot define a web component equally with `customElements` as well as `Vue` since this would not allow us isomorphic code. 
+
+Let's go step by step:
+
+- In general the issue is

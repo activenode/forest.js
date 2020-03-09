@@ -20,6 +20,7 @@
   "dependencies": {
     "@now/node": "^1.4.1",
     "vue": "^2.6.11",
+    "vue-custom-element": "^3.2.13",
     "vue-server-renderer": "^2.6.11"
   },
   "devDependencies": {
