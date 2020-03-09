@@ -25,7 +25,9 @@ export default (req: NowRequest, res: NowResponse) => {
     data: {},
     template: `<div>
       <counter-component customText="foobar" />
-      <widget-vue />
+      <widget-vue>
+        sdaffdas
+      </widget-vue>
     </div>`,
   });
 
