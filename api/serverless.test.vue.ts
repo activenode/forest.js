@@ -2,8 +2,9 @@ import { NowRequest, NowResponse } from '@now/node';
 import Vue from 'vue';
 import '../vue-sample/CounterComponent';
 import { createRenderer } from 'vue-server-renderer';
-import vueCustomElement from 'vue-custom-element'
+import vueCustomElement from 'vue-custom-element';
 
+Vue.use(vueCustomElement);
 
 
 export default (req: NowRequest, res: NowResponse) => {
