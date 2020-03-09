@@ -162,7 +162,43 @@ This means in other words: Since the components dont know anything from each oth
 > As a side note: Another negative impact with this nesting is that sub-components could trigger themselves already to initialize - as the browser recognizes them (e.g. adding event listeners) and then be moved again (loosing their event listeners) only to be initalized again. However you could try to overcome this with something like an attribute flag...
 
 ## What can we do? 
-As we have seen copying over initial HTML and then rendering with any dynamic framework is an option that *cannot* be considered because we can neither properly identify the child components nor could we properly tell the parent component that a sub-component tree has changed and that this is totally alright without the parent component having DOMTree-diffing issues.
+As we have seen copying over initial HTML and then rendering with any dynamic framework is an option that *cannot* be considered because we can neither properly identify the child components nor could we properly communicate to the parent component that a sub-component tree has changed and that this is totally alright without the parent component having DOMTree-diffing issues.
+
+Generically spoken the issue is with having "unknown" precompiled content there which can even be properly server-side-rendered and still be unknown as the match back to the template cannot be processed (as described in all of the text above). Also as a side-effect we are trying to deal with browser-specific lifecycles (`connectedCallback` etc) within lifecycles of different frameworks and all of that potentially infinitely nested.
+
+### Proposal 1 (trivial)
+
+Do not use custom elements within custom elements. By this logic you only have to deal with the top level rendering which should be quite alright since you would not need to identify the child components.
+But keep in mind that it is normal to have custom elements nested so this proposal seems as useless as trivial but maybe it fits for you.
+
+tldr for Proposal 1: do not render children (do not use "slots").
+
+### Proposal 2
+
+Nest "3d-party" / other components inside of your component but precompiled. That way you kind of have what is in *Proposal 1* but not with the trivial exclusion of NOT having those child components at all.
+
+Example:
+
+```js
+import ChildElement from `3dparty/VueComponent/dist`;
+
+ReactDOM.render(
+    <div>
+        <ChildElement />
+    </div>
+)
+```
+
+Since this provides a way of React knowing the DomTree this would properly render. On production you could set the `Vue` library then as `external` so that its not bundled all the time.
+
+You can play this game with any framework but it would make the top-most framework the owning one.
+
+
+### Proposal 3 ShadowDOM
+
+Let us put together the requirements tbd
+
+
 
 
 Sources:
