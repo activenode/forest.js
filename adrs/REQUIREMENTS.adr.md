@@ -60,6 +60,94 @@ Proof 2 (define `my-component`):
 
 Defining `Vue.component('my-component', ...)` with the given example from above would do nothing since `my-component` is not existent in the html string.
 
+## Finding a workaround against the proofs
+Let us take the following example:
+
+Let us take `Vue` as an example here:
+
+```html
+<my-comp></my-comp>
+```
+
+If we put this to SSR we could do:
+
+```js
+Vue.component('my-comp', {
+    return createElement(
+      'customelement-my-comp', // tag name
+      {props: {}},
+      [
+        createElement(SomeVueComponent, {
+          props: {},
+        }),
+        this.$slots.default,
+      ], // array of children
+    );
+})
+```
+
+This would make sure that we are rendering out an actual web component.
+
+So it would turn to
+
+
+```html
+<customelement-my-comp>...</customelement-my-comp>
+```
+
+So on your frontend you would need to define  something like
+
+```js
+customElements.define('customelement-my-comp', class extends HTMLElement {
+    connectedCallback() {
+        const Vue = require('Vue');
+        const app = new Vue({
+            data: context,
+            template: `<my-comp />`
+        });
+
+        app.$mount(this);
+    }
+})
+```
+
+The above code will lead to an infinite loop as the `my-comp` would render another `customelement-my-comp` which would render another Vue `my-comp` and so on and so forth.
+
+The workaround for this: Do not render the component clientwise that will render itself but render the *anonymous* Vue component on the client:
+
+```js
+customElements.define('customelement-my-comp', class extends HTMLElement {
+    connectedCallback() {
+        const Vue = require('Vue');
+        const MyComp = {
+            template: whatever,
+            ...
+        };
+        const app = new Vue({
+            data: context,
+            render (h) {
+                return h(MyComp, {
+                    props: {...}
+                }, slotChildren)
+            }
+        });
+
+        app.$mount(this);
+    }
+})
+```
+
+So far (without going deeper into all of the use-cases) this would solve the above described issues.
+
+To give you a issue upfront why this is not yet the full-fledged solution:
+
+1. We only have integrated Vue by now
+2. If we render `slots` with SSR we loose the context what the actual slots were (further described below) since now we are providing the `slotChildren` but we would need to be able to identify them exactly and take them out of the existing code to put them there. The issue is that since the slot children are web components again they would probably trigger themselves an init process and POTENTIALLY change their html structure (factually rather not since we expect all of them to be in a specific state cause all of them are SSRed). So we would need a way to disallow this. And even then they would at one point go out-of-sync (read further below) and the "parent component" would not be able to properly to the diffing since it is missing the information of the change of the child component.
+
+
+
+
+
 ## Why do you even need isomorphism and dont just use Puppeteer?
 
 1. Async rendered components especially those with loading state might leave the headless-browser-rendered one with a corrupt state.
@@ -196,7 +284,96 @@ You can play this game with any framework but it would make the top-most framewo
 
 ### Proposal 3 ShadowDOM
 
-Let us put together the requirements tbd
+Let us put together the requirements:
+
+- we want to render children that are already defined e.g. `<wc> <children...> </wc>`
+- we want to have multiple different frameworks
+- we want SSR
+- we want web components
+
+This sheer amount of ridicolous requirements can potentially be fulfilled if ShadowDOM is used.
+
+ShadowDOM inherits WebComponents/CustomElements from the same document (so the scoping of ShadowDOM is not an issue for child components).
+
+Let us have a closer look. Let the following be a React component that is rendered within the web component.
+
+```html
+<!-- no SSR here yet -->
+<wc>
+    <children...>
+</wc>
+```
+
+The React component could look like this:
+
+```html
+<div>
+    <slot />
+</div>
+```
+
+Since React does not know the `slot` component it would render within `wc` with the following result.
+
+```html
+<!-- CSR -->
+<div>
+    <slot />
+</div>
+```
+
+This is actually nice first of all since it helps to keep consistency. The browser does not copy anything over to the slot element. It only references the element that is given to it.
+
+Sample:
+```html
+<wc>
+    <strong id="wuza" class="to-be-slotted"></strong>
+</wc>
+```
+
+The sample does not really have a nesting yet but we will look at that later.
+
+The sample will turn into the following in the browser (when properly using slots with ShadowDOM):
+
+
+```html
+<wc>
+    #shadowDom 🔽
+    <div>
+        <slot @ref={#wuza}>
+            <!-- strong tag is rendered AS IF it was here -->
+        </slot>
+    </div>
+    #shadowDom 🔼
+
+    #lightDom (not visible) 🔽
+    <strong id="wuza" class="to-be-slotted">foo</strong>
+    #lightDom 🔽
+</wc>
+```
+
+If you check the `.innerHTML` of the ShadowDOM (`wc.shadowRoot.innerHTML`) it will return this:
+
+```html
+<div>
+    <slot></slot>
+</div>
+```
+
+This is totally as expected since the slot is a PLACEHOLDER and the browser does not put the slotted element there. It just references it.
+This being said the innerHTML stays consistent 😲🤩 . Cool stuff.
+
+How does that help us in any of the issues from above?
+
+Let's go issue by issue:
+
+1. Nesting
+2. SSR with Nesting
+
+### Nesting
+tbd
+
+### SSR with Nesting
+tbd
 
 
 
