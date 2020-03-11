@@ -498,7 +498,7 @@ This situation is bad. Because if it was inside-out then the most outer element 
 
 It is now very important to understand that even if it was outside-in initialization you would reach a point of inconsistency if the components you are using are affected by ANY kind of state change or user interaction - since that again would cause a change in the DOM and therefore cause an inconistency for the parent component.
 
-Let's get back on track how ShadowDOM will help us by getting the beforementioned code and adapting it a bit.
+Let's get back on track how ShadowDOM will help us by getting the aforementioned code and adapting it a bit.
 
 ```js
 // Vue/SliderElem.js
@@ -550,7 +550,7 @@ to this:
 </wc-slider-elem>
 ```
 
-Whoops. Where did our image go? Well since Vue uses the same element (https://vuejs.org/v2/guide/components-slots.html) tag name for their placeholder as the actual HTML slot definition (https://developer.mozilla.org/en-US/docs/Web/HTML/Element/slot) it is quite clear that `Vue` sees the `slot` as a vue placeholder and since we didn't provide it with any data for that placeholder Vue will render it empty.
+Whoops. Where did our `img` go? Well since Vue uses the same element (https://vuejs.org/v2/guide/components-slots.html) tag name for their placeholder as the actual HTML slot definition (https://developer.mozilla.org/en-US/docs/Web/HTML/Element/slot) it is quite clear that `Vue` sees the `slot` as a vue placeholder and since we didn't provide it with any data for that placeholder Vue will render it empty.
 
 Since this is a severe issue it is probably clear why Vue actually deprecated `slot` as a tag name in favor of a generic attribute directive `v-slot` (as of version `2.6.0`).
 
@@ -601,7 +601,7 @@ customElements.define('wc-slider-elem', class extends HTMLElement {
 
 Now it should render correctly. So it would render this:
 
-```
+```html
 <wc-slider-elem>
     <img src="test.jpg" />
 </wc-slider-elem>
@@ -625,6 +625,51 @@ to this:
 ```
 
 Now this is awesome. Because even if we change the stuff within "lightDOM" the innerHTML inside of the shadowDOM where our framework component is rendered stays consistent ! 🤩‼
+
+Let us nest this for technical reasons (even if it does not make sense in our example).
+
+
+
+```html
+<wc-slider-elem>
+    <wc-slider-elem>
+        <img src="test.jpg" />
+    </wc-slider-elem>
+</wc-slider-elem>
+```
+
+This nested example would render to:
+```html
+<wc-slider-elem>
+    #shadowDom 🔽
+    <div>
+        <slot @ref={<wc-slider-elem ... />}></slot>
+    </div>
+    #shadowDom 🔼
+
+    #lightDOM 🔽
+    <wc-slider-elem>
+        #shadowDom 🔽
+        <div>
+            <slot @ref={<img src="test.jpg" />}></slot>
+        </div>
+        #shadowDom 🔼
+
+        #lightDOM 🔽
+        <img src="test.jpg" />
+        #lightDOM 🔼
+    </wc-slider-elem>
+    #lightDOM 🔼
+</wc-slider-elem>
+```
+
+As you can see the parent `wc-slider-elem` still has a "consistent" and "static" child even though the child is everything else but "consistent". This is due to the nature of how a `slot` works. So the parent element really only sees the `.innerHTML` `slot` but not the actual referenced HTML. And this works recursively.
+
+So far the point 1 is solved: Nesting with (different) frameworks including web components. Wow, that took a while.
+
+But we did'nt solve yet SSR.
+
+
 
 
 
