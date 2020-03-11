@@ -715,8 +715,11 @@ So let us take into consideration what we know (given all of the requirements we
 I do not want to go deeper into this since then you would get some pre-rendered HTML but you would not see it until the WebComponent is executed and moving it to the correct places. So you are doing something serverwise that only works when JavaScript is executed. This does not sound like at all something SSR is for. In this case I would rather recommend to not do SSR at all to be precise.
 
 
+#### Approach 2, hiding the slot.
+This comes with one big advantage and has compareably low disadvantages.
 
-
+What we will have to accept is the fact that we require ShadowDOM and that ShadowDOM (by now) can not be implemented declaratively (maybe in the future we will have a `shadowDOM` attribute or even a `<ShadowFragment>` tag?).
+By that we already have the disadvantage defined: Nested components 
 
 
 
