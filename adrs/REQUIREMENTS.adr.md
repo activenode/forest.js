@@ -321,7 +321,7 @@ Since React does not know the `slot` component it would render within `wc` with 
 </div>
 ```
 
-This is actually nice first of all since it helps to keep consistency. The browser does not copy anything over to the slot element. It only references the element that is given to it.
+This is actually nice first of all since it helps to keep consistency. The browser does not copy anything over to the slot element. It only references the element that is given to it. See also my mini-sample here https://ycgi8.csb.app/ .
 
 Sample:
 ```html
@@ -370,7 +370,158 @@ Let's go issue by issue:
 2. SSR with Nesting
 
 ### Nesting
-tbd
+
+Assume this is played by your CMS html-wise:
+
+```html
+<wc-slider>
+    <wc-slider-elem>
+        <img src="test.jpg" />
+    </wc-slider-elem>
+
+    <wc-slider-elem>
+        <img src="test2.jpg" />
+    </wc-slider-elem>
+</wc-slider>
+```
+
+So first of all everything that we "slotify" must be static. WHY? It is because the "slottable" (anything) html as compared to the actual `slot` (native html element) is SEEN by the framework but the framework expects consistency for the stuff it does not know. By definition ANY dynamic web component can be considered static if it has a ShadowDOM since the outside (browser) perspective doesn't see dynamic changes within the ShadowDOM. If that component is using slots again those slots should be again static. Easy, right? Kinda 🤓
+
+Inside out is easier so lets take `wc-slider-elem`:
+
+```js
+// Vue/SliderElem.js
+export default {
+    template: `
+        <div class="slider-elem">
+            <slot></slot>
+        <div>
+    `
+}
+
+// main.js
+customElements.define('wc-slider-elem', class extends HTMLElement {
+    connectedCallback() {
+        const SliderElem = require('Vue/SliderElem');
+
+        const innerHTML = this.innerHTML; // <img src="...." />
+        this.innerHTML = ''; // cleaning up after read
+
+        const app = new Vue({
+            data: {},
+
+            render: function(createElement) {
+                return createElement(
+                    SliderElem,
+                    {props: {}},
+                    this.innerHTML
+                ),
+            }
+        });
+
+        app.$mount(this);
+    }
+});
+```
+
+The above example will render from this:
+
+```html
+<wc-slider-elem>
+    <img src="test2.jpg" />
+</wc-slider-elem>
+```
+
+to this:
+```html
+<wc-slider-elem>
+    <div class="slider-elem">
+        <img src="test2.jpg" />
+    <div>
+</wc-slider-elem>
+```
+
+This looks good but in fact it is bad: It changed itself - the DOM of that element has changed - which is by definition inconsistent from a view of the parent component.
+**Why is that inconsistency bad**?
+
+The parent component is by definition of a custom element initialized asynchronously. It gets initialized by the browser.
+
+So maybe it is worth to understand how the browser initializes custom elements.
+Let's make a quick side quest here:
+
+```
+customElements.define('x-faa', class extends HTMLElement {
+    connectedCallback() {
+        console.log('x-faa triggered');
+    }
+})
+
+customElements.define('x-foo', class extends HTMLElement {
+    connectedCallback() {
+        console.log('x-foo triggered');
+    }
+})
+
+customElements.define('x-bar', class extends HTMLElement {
+    connectedCallback() {
+        console.log('x-bar triggered');
+    }
+})
+
+
+customElements.define('x-boo', class extends HTMLElement {
+    connectedCallback() {
+        console.log('x-boo triggered');
+    }
+})
+
+document.body.innerHTML = '<x-foo><x-bar><x-boo></x-boo></x-bar></x-foo><x-faa></x-faa>';
+```
+
+Having the above triggers this :
+
+```js
+logs >
+x-foo triggered
+x-bar triggered
+x-boo triggered
+x-faa triggered
+```
+
+So it means that (at least in Chrome) custom elements are initialized inside-out and top-to-bottom. Or tldr: Outside-In-Top-Down.
+
+
+So the outer one gets triggered first.
+
+
+
+It is crucial to understand what is happening in the above example. We
+
+Should work as it goes.
+
+```js
+customElements.define('wc-slider', class extends HTMLElement {
+    connectedCallback() {
+        const Slider = require('Vue/Slider');
+
+        const app = new Vue({
+            data: {},
+            render (h) {
+                return h(SliderElem, {
+                    props: {...},
+                    [
+                        createElement(Slider, { props: {} }),
+                        this.$slots.default,
+                    ]
+                })
+            }
+        });
+
+        const shadow = this.attachShadow({ mode: "open" });
+        app.$mount(shadow);
+    }
+});
+```
 
 ### SSR with Nesting
 tbd
