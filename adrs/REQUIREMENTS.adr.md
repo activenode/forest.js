@@ -670,39 +670,16 @@ So far the point 1 is solved: Nesting with (different) frameworks including web 
 But we did'nt solve yet SSR.
 
 
-
-
-
-It is crucial to understand what is happening in the above example. We
-
-Should work as it goes.
-
-```js
-customElements.define('wc-slider', class extends HTMLElement {
-    connectedCallback() {
-        const Slider = require('Vue/Slider');
-
-        const app = new Vue({
-            data: {},
-            render (h) {
-                return h(SliderElem, {
-                    props: {...},
-                    [
-                        createElement(Slider, { props: {} }),
-                        this.$slots.default,
-                    ]
-                })
-            }
-        });
-
-        const shadow = this.attachShadow({ mode: "open" });
-        app.$mount(shadow);
-    }
-});
-```
-
 ### SSR with Nesting
-tbd
+
+What we now already is that without ShadowDOM the implementation of Custom Elements/WebComponents with a framework with its own Lifecycle (React, Vue, whatever...) is something that simply seems impossible - factwise, not opinion-wise. And this statement is valid for just one framework equally as for using multiple frameworks.
+
+But good thing is that all major browsers implement the solution for it: `slot`s with ShadowDOM (since without ShadowDOM there is no `slot` interface).
+
+Now the problem is that on the server there is no such thing as ShadowDOM or CustomElement. So we cannot deliver something serverwise that is a ShadowDOM.
+
+...tbc
+
 
 
 
