@@ -678,7 +678,44 @@ But good thing is that all major browsers implement the solution for it: `slot`s
 
 Now the problem is that on the server there is no such thing as ShadowDOM or CustomElement. So we cannot deliver something serverwise that is a ShadowDOM.
 
-...tbc
+Let us first take an unnested sample:
+
+```html
+<wc-slider-elem>
+    <img src="test.jpg" />
+</wc-slider-elem>
+```
+
+```html
+<wc-slider-elem>
+    #shadowDom 🔽
+    <div>
+        <slot @ref={<img ..>}></slot>
+    </div>
+    #shadowDom 🔼
+
+    #lightDOM 🔽
+    <img src="test.jpg" />
+    #lightDOM 🔼
+</wc-slider-elem>
+```
+
+We need to recreate the above - but serverside. 
+So let us take into consideration what we know (given all of the requirements we collected and facts that we found): Inside of the ShadowDOM there is NEVER another WebComponent - because if there is another WebComponent then it is slotted -> not visible inside the ShadowDOM.
+
+#### Approach 1, trivial
+> Just provide a JSON object or use attributes to tell which is what
+
+```html
+<wc-slider-elem ssr="true" shadowDomHtml="<...>" lightDomHtml="<...>">
+    ...
+</wc-slider-elem>
+```
+
+I do not want to go deeper into this since then you would get some pre-rendered HTML but you would not see it until the WebComponent is executed and moving it to the correct places. So you are doing something serverwise that only works when JavaScript is executed. This does not sound like at all something SSR is for. In this case I would rather recommend to not do SSR at all to be precise.
+
+
+
 
 
 
