@@ -536,7 +536,7 @@ customElements.define('wc-slider-elem', class extends HTMLElement {
 });
 ```
 
-This would render this:
+It would render this:
 ```
 <wc-slider-elem>
     <img src="test.jpg" />
@@ -554,7 +554,78 @@ Whoops. Where did our image go? Well since Vue uses the same element (https://vu
 
 Since this is a severe issue it is probably clear why Vue actually deprecated `slot` as a tag name in favor of a generic attribute directive `v-slot` (as of version `2.6.0`).
 
-But since it is not yet removed but deprecated you can solve it either via using your own render function or by using the `v-html` directive.
+But since it is not yet removed but deprecated you can solve it either via using your own render function or by using the `v-html` directive as follows:
+
+```js
+// Vue/SliderElem.js
+Vue.component("Slotty", {
+  render: createElement => {
+    return createElement(
+      "slot", // tag name
+    );
+  }
+});
+
+export default {
+    template: `
+        <div class="slider-elem">
+            <Slotty />
+        <div>
+    `
+}
+
+customElements.define('wc-slider-elem', class extends HTMLElement {
+    connectedCallback() {
+        const SliderElem = require('Vue/SliderElem');
+
+        // we do not read the innerHTML anymore, we just LEAVE the innerHTML in the component AS IS
+        //const innerHTML = this.innerHTML; // <img src="...." />
+        //this.innerHTML = ''; // cleaning up after read
+
+        const app = new Vue({
+            data: {},
+
+            render: function(createElement) {
+                return createElement(
+                    SliderElem,
+                    {props: {}}
+                ),
+            }
+        });
+
+        const shadowRoot = this.attachShadow({ mode: 'open' });
+        app.$mount(shadowRoot);
+    }
+});
+```
+
+Now it should render correctly. So it would render this:
+
+```
+<wc-slider-elem>
+    <img src="test.jpg" />
+</wc-slider-elem>
+```
+
+to this:
+```html
+<wc-slider-elem>
+    #shadowDom 🔽
+    <div>
+        <slot @ref={<img src="test.jpg" />}>
+            <!-- img tag is not really here, just a reference -->
+        </slot>
+    </div>
+    #shadowDom 🔼
+
+    #lightDOM 🔽
+    <img src="test.jpg" />
+    #lightDOM 🔼
+</wc-slider-elem>
+```
+
+Now this is awesome. Because even if we change the stuff within "lightDOM" the innerHTML inside of the shadowDOM where our framework component is rendered stays consistent ! 🤩‼
+
 
 
 It is crucial to understand what is happening in the above example. We
