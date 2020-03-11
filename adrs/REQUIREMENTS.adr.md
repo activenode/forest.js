@@ -720,7 +720,6 @@ I do not want to go deeper into this since then you would get some pre-rendered 
 
 
 
-
 Sources:
 - https://developers.google.com/web/tools/puppeteer/articles/ssr
 
