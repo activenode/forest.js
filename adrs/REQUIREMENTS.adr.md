@@ -441,12 +441,12 @@ to this:
 </wc-slider-elem>
 ```
 
+There is no actual ShadowDOM yet. The `slot` comes from Vue and renders the child elements were the `slot` sits. It is literally a `Vue` feature that has nothing to do with WebComponents/CustomElements (we will get into that in some moments).
+
 This looks good but in fact it is bad: It changed itself - the DOM of that element has changed - which is by definition inconsistent from a view of the parent component.
 **Why is that inconsistency bad**?
 
-The parent component is by definition of a custom element initialized asynchronously. It gets initialized by the browser.
-
-So maybe it is worth to understand how the browser initializes custom elements.
+It is worth to understand how the browser initializes custom elements.
 Let's make a quick side quest here:
 
 ```
@@ -490,9 +490,71 @@ x-faa triggered
 
 So it means that (at least in Chrome) custom elements are initialized inside-out and top-to-bottom. Or tldr: Outside-In-Top-Down.
 
+Now having this it means that the most outside custom element will trigger the initialization first.
 
-So the outer one gets triggered first.
+This situation is bad. Because if it was inside-out then the most outer element would be able to get all correctly inner-rendered child elements (assuming that they are immediately rendered). However outside-in (which is how the browser does it) means the exact opposite: First the most parent component gets to know the child structure and then afterwards the child structure changes -> inconcistency.
 
+> You could try to overcome this inconistency by building an orchestrator to overcome how the browser initializes but then again I am asking why would you even bother to use CustomElements at all if you are changing their behaviour in their core. Then I would rather "recommend" you to use a MutationObserver and build your own CustomElements than doing this weird side-effect-heavy workaround of orchestration.
+
+It is now very important to understand that even if it was outside-in initialization you would reach a point of inconsistency if the components you are using are affected by ANY kind of state change or user interaction - since that again would cause a change in the DOM and therefore cause an inconistency for the parent component.
+
+Let's get back on track how ShadowDOM will help us by getting the beforementioned code and adapting it a bit.
+
+```js
+// Vue/SliderElem.js
+export default {
+    template: `
+        <div class="slider-elem">
+            <slot></slot>
+        <div>
+    `
+}
+
+// main.js
+customElements.define('wc-slider-elem', class extends HTMLElement {
+    connectedCallback() {
+        const SliderElem = require('Vue/SliderElem');
+
+        // we do not read the innerHTML anymore, we just LEAVE the innerHTML in the component AS IS
+        //const innerHTML = this.innerHTML; // <img src="...." />
+        //this.innerHTML = ''; // cleaning up after read
+
+        const app = new Vue({
+            data: {},
+
+            render: function(createElement) {
+                return createElement(
+                    SliderElem,
+                    {props: {}}
+                ),
+            }
+        });
+
+        const shadowRoot = this.attachShadow({ mode: 'open' });
+        app.$mount(shadowRoot);
+    }
+});
+```
+
+This would render this:
+```
+<wc-slider-elem>
+    <img src="test.jpg" />
+</wc-slider-elem>
+```
+
+to this:
+```
+<wc-slider-elem>
+    <div></div>
+</wc-slider-elem>
+```
+
+Whoops. Where did our image go? Well since Vue uses the same element (https://vuejs.org/v2/guide/components-slots.html) tag name for their placeholder as the actual HTML slot definition (https://developer.mozilla.org/en-US/docs/Web/HTML/Element/slot) it is quite clear that `Vue` sees the `slot` as a vue placeholder and since we didn't provide it with any data for that placeholder Vue will render it empty.
+
+Since this is a severe issue it is probably clear why Vue actually deprecated `slot` as a tag name in favor of a generic attribute directive `v-slot` (as of version `2.6.0`).
+
+But since it is not yet removed but deprecated you can solve it either via using your own render function or by using the `v-html` directive.
 
 
 It is crucial to understand what is happening in the above example. We
