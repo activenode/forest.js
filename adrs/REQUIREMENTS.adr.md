@@ -719,7 +719,136 @@ I do not want to go deeper into this since then you would get some pre-rendered 
 This comes with one big advantage and has compareably low disadvantages.
 
 What we will have to accept is the fact that we require ShadowDOM and that ShadowDOM (by now) can not be implemented declaratively (maybe in the future we will have a `shadowDOM` attribute or even a `<ShadowFragment>` tag?).
-By that we already have the disadvantage defined: Nested components 
+By that we already have the disadvantage defined: Nested components have to be slotted (as described above) and are therefore NOT inside of the rendering path of the parent component but live outside of it (as per definition of slots).
+
+This means you have components that need to be nested as siblings - which again is totally normal for slots and expected. BUT as long as the ShadowDOM is not yet attached (so JS not executed yet) the slots are not active and siblings instead of actual HTML nesting would be just wrong and would provide a simply wrong view.
+
+See this example:
+
+```html
+<wc-slider>
+    <div data-ssr="true" class="slider">
+        <slot></slot>
+    </div>
+
+    <wc-slider-elem unslotted="true">
+        <div data-ssr="true">
+            <img src="test.jpg" />
+        </div>
+    </wc-slider-elem>
+
+    <wc-slider-elem unslotted="true">
+        <div data-ssr="true">
+            <img src="test.jpg" />
+        </div>
+    </wc-slider-elem>
+</wc-slider>
+```
+
+So everything was server-rendered already.
+So what we would need to do here is something like this:
+
+```scss
+[unslotted="true"] {
+    display: none;
+}
+```
+```js
+customElements.define(
+  "wc-slider",
+  class extends HTMLElement {
+    connectedCallback() {
+      if (this.dataset.ssr === "true") {
+        const sliderWrapper = document.querySelector(".slider-wrapper");
+        this.attachShadow({ mode: "open" })
+          .appendChild(sliderWrapper);
+
+        this.querySelectorAll('[unslotted="true"]')
+          .forEach(elem => {
+            elem.removeAttribute("unslotted");
+            // to make it visible again
+          });
+      }
+    }
+  }
+);
+```
+
+
+#### Approach 3, Avoid Flash of Content
+Approach 3 follows approach 2 but renders the component exactly where it should not be at first. It renders it exactly next to the `slot` tag so that it is in the "correct" dom position for the correct visual appearance.
+
+Then when JS is executed we add a ShadowDOM, move that DOM reference of the slotted child OUTSIDE of the ShadowDOM and we have the expected result.
+
+This is shown here and it works fine - clientwise:  https://xuvwy.csb.app/
+
+It would've been to easy if there is no pitfall on this one right? Yup. Isomorphism is given when a framework can render 1:1 the same client and serverwise. Which we do not in this example. 
+
+Let me explain:
+
+Server returns:
+```html
+<wc>
+  <div class="slider-elem">
+    <slot></slot>
+
+    <div unslotted="true">
+      some text
+    </div>
+  </div>
+</wc>
+```
+
+Client adapts it to have proper encapsulation and makes this:
+
+```html
+<wc>
+  #shadowDom 🔽
+  <div class="slider-elem">
+    <slot></slot>
+  </div>
+  #shadowDom 🔼
+
+  #lightDom 🔽
+  <div unslotted="true">
+    some text
+  </div>
+  #lightDom 🔼
+</wc>
+```
+
+So our issue is not really the FACT that there is a difference but the fact that our Framework (Vue, React, whatever) would need to render something different on server than on client. So you would actually need to play DOM elements in different places depending if they are rendered on server or client.
+
+It can work but it really is a painful intention.
+
+Example:
+
+```jsx
+render(<wc>
+  <div class="slider-elem">
+    <slot></slot>
+
+    {if server}
+      <div unslotted="true">
+        some text
+      </div>
+    {/if}
+  </div>
+
+  {if client}
+    <div unslotted="true">
+      some text
+    </div>
+  {/if}
+</wc>)
+```
+
+Pseudo-Isomorphism but would potentially work. 🔼
+Do I recommend this? No since it really makes your code messy.
+
+
+
+
 
 
 
