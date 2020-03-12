@@ -2,7 +2,7 @@
 
 If one uses the component `my-component` on the client (frontend) then it must be available to the browser as a `customElements`. So there is a prerequisite of having a `customElements.define('my-component', ...)` in the frontend side. 
 
-Using e.g. `Vue.component(`my-component`)` therefore is not target-aimed since it would only expose a vue element internally to vue that when rendered is replaced with whatever content of that vue component.
+Using e.g. `Vue.component('my-component')` therefore is not target-aimed since it would only expose a vue element internally to vue that when rendered is replaced with whatever content of that vue component.
 
 Using the official component wrapper is ALSO not an option since it is not isomorphic. You can already tell by its type of definition:
 
@@ -884,7 +884,9 @@ Why is this better than having `if server ...`? Simple: You have one codebase th
 
 
 
+### Show me how I can combine it with a framework now! 🤓
 
+tbc...
 
 
 
