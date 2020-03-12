@@ -843,8 +843,46 @@ render(<wc>
 </wc>)
 ```
 
-Pseudo-Isomorphism but would potentially work. 🔼
-Do I recommend this? No since it really makes your code messy.
+🔼 Pseudo-Isomorphism but would potentially work. 
+Do I recommend this? No since it makes your code really really messy.
+
+If you WANT to go for this approach then I would rather recommend a `postprocessor` on the server.
+
+Example:
+
+```jsx
+// This is what you render on the server
+ssrString = render(<wc>
+  <div class="slider-elem">
+    <slot></slot>
+  </div>
+
+  <div unslotted="true">
+    some text
+  </div>
+</wc>)
+
+// now we make use of an xml reader to put the "unslotted" elements
+// next to the <slot> element (as a sibling)
+postProcessedSsrString = postprocess(ssrString);
+
+console.log(postProcessedSsrString)
+
+// would log:
+<wc>
+  <div class="slider-elem">
+    <slot></slot>
+
+    <div unslotted="true">
+      some text
+    </div>
+  </div>
+</wc>
+```
+
+Why is this better than having `if server ...`? Simple: You have one codebase that is NOT messed up and the only one "messing" around is the postprocessor on the server. 
+
+
 
 
 
