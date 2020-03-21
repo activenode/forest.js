@@ -8,5 +8,9 @@ Vue.use(Forest);
 Vue.config.productionTip = false;
 //Vue.use(Forest);
 
-Vue.isoComponent('happy-rainbow', App);
+const RainbowComponent = Vue.isoComponent('happy-rainbow', App);
+
+new Vue({
+    render: h => h(RainbowComponent)
+}).$mount('#app');
 
