@@ -4,10 +4,6 @@ import '../vue-sample/CounterComponent';
 import { createRenderer } from 'vue-server-renderer';
 import vueCustomElement from 'vue-custom-element';
 
-console.log('some log');
-
-console.log('some log2', vueCustomElement);
-
 Vue.use(vueCustomElement);
 
 
