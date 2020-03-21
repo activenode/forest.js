@@ -1,8 +1,12 @@
 import Vue from "vue";
 import App from "./App.vue";
+import Forest from "./forestjs";
+
+Vue.use(Forest);
+
 
 Vue.config.productionTip = false;
+//Vue.use(Forest);
 
-new Vue({
-  render: h => h(App)
-}).$mount("#app");
+Vue.isoComponent('happy-rainbow', App);
+
