@@ -41,8 +41,22 @@ export default {
       if (hasBrowserCapabilities) {
         customElements.define('happy-rainbow', class extends HTMLElement {
           connectedCallback() {
+            const attrs = this.getAttributeNames().reduce((attrObj: any, attrName: string) => {
+              attrObj[attrName] = this.getAttribute(attrName);
+              return attrObj;
+            }, {});
+
             const app = new Vue({
-              render: h => h(WrappedAnonComponent)
+              render (h: Vue.CreateElement) {
+                const self = this as unknown as any;
+                const $slotsDefault = self.$slots.default;
+                
+                return h(WrappedAnonComponent, {
+                  attrs: {
+                    ...attrs
+                  }
+                }, $slotsDefault || []);
+              }
             });
 
             // TODO: need to NOT use querySelector cause it is dangerous
@@ -52,13 +66,13 @@ export default {
               console.log('trying to hydrate');
               const hydrationTarget: Element = 
                 (this.querySelector(`.${innerWrapperClassName}`) as Element);
-              //app.$mount(hydrationTarget, true);
+              app.$mount(hydrationTarget, true);
             } else {
               console.log('render fresh!');
               const ghost = document.createElement('div');
               this.appendChild(ghost);
               
-              //app.$mount(ghost);
+              app.$mount(ghost);
             }
           }
         })
@@ -69,10 +83,14 @@ export default {
         render (h: Vue.CreateElement) {
           const self = this as unknown as any;
           const $slotsDefault = self.$slots.default;
+
+          console.log('self.$attrs', );
           
           return h(
             tagName, 
-            {},
+            {
+              attrs: { ...self.$attrs }
+            },
             [
               h(WrappedAnonComponent, {
                 attrs: self.$attrs
