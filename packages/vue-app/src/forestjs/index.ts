@@ -1,5 +1,6 @@
 /* eslint-disable */
-import _Vue from 'vue';
+import _Vue, { Component } from 'vue';
+import { VNode } from 'vue/types/umd';
 
 declare module 'vue/types/vue' {
   export interface VueConstructor   {
@@ -19,13 +20,18 @@ export default {
 
       const innerWrapperClassName = `wc-${tagName}`;
       const WrappedAnonComponent = {
-        render: (h: Vue.CreateElement) => {
+        render (h: Vue.CreateElement) {
+          const self = this as unknown as any;
+          const $slotsDefault = self.$slots.default;
+
           return h(
-            'div', 
+            'div',
             {
               class: innerWrapperClassName
             },
-            [h(AnonComponent)], 
+            [h(AnonComponent, {
+              attrs: self.$attrs
+            }, $slotsDefault || [])], 
           );
         }
       };
@@ -46,27 +52,35 @@ export default {
               console.log('trying to hydrate');
               const hydrationTarget: Element = 
                 (this.querySelector(`.${innerWrapperClassName}`) as Element);
-              app.$mount(hydrationTarget, true);
+              //app.$mount(hydrationTarget, true);
             } else {
               console.log('render fresh!');
               const ghost = document.createElement('div');
               this.appendChild(ghost);
               
-              app.$mount(ghost);
+              //app.$mount(ghost);
             }
           }
         })
       }
 
+
       return {
-        render: (h: Vue.CreateElement) => {
+        render (h: Vue.CreateElement) {
+          const self = this as unknown as any;
+          const $slotsDefault = self.$slots.default;
+          
           return h(
             tagName, 
             {},
-            [h(WrappedAnonComponent)], 
+            [
+              h(WrappedAnonComponent, {
+                attrs: self.$attrs
+              }, $slotsDefault || [])
+            ], 
           );
         }
-      }
+      } as Component;
     }
   }
 }

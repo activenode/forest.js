@@ -1,17 +1,24 @@
 <template>
-  <div class="app">
-    <img alt="Vue logo" src="./assets/logo.png" />
-    <HelloWorld msg="Welcome to Your Vue.js + TypeScript App" />
+  <div>
+    <div class="app rainbow-1">
+      <Rainbow msg="Hello I am Rainbow 1">
+        <strong>I am a plain rainbow child</strong>
+      </Rainbow>
+    </div>
+
+    <div class="app rainbow-2">
+      <Rainbow msg="I am Rainbow 2 without children" />
+    </div>
   </div>
 </template>
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
-import HelloWorld from "./components/HelloWorld.vue";
+import Rainbow from "./components/Rainbow";
 
 @Component({
   components: {
-    HelloWorld
+    Rainbow
   }
 })
 export default class App extends Vue {}
