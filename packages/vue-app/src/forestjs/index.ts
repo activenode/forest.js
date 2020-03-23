@@ -87,9 +87,13 @@ export default {
                 (this.querySelector(`.${innerWrapperClassName}`) as Element);
 
               const slotref = hydrationTarget.getAttribute('slotref');
-              console.log('hydrationTarget', hydrationTarget);
-              console.log('slotref', slotref);
-              //app.$mount(hydrationTarget, true);
+              const slottables = this.querySelectorAll(`[unslotted="true"][slotref="${slotref}"]`);
+
+              const shadowRoot = this.attachShadow({ mode: 'open' });
+              shadowRoot.appendChild(hydrationTarget);
+              slottables.forEach(slottable => this.appendChild(slottable));
+
+              app.$mount(hydrationTarget, true);
             } else {
               // move all outside the shadowdom if something exists
               console.log('render fresh!');
