@@ -1,23 +1,19 @@
 <template>
   <div class="hello">
-    <h1>{{ msg }} 123</h1>
+    <h1>{{ msg }}</h1>
     <div class="slot-wrapper">
-      <SlotFactory />
+      <IsomorphicSlot />
     </div>
   </div>
 </template>
 
-<docs>
-  test
-</docs>
-
 <script lang="ts">
 import { Component, Prop, Vue } from "vue-property-decorator";
-import SlotFactory from "./SlotFactory.vue";
+import IsomorphicSlot from "./IsomorphicSlot.vue";
 
 @Component({
   components: {
-    SlotFactory
+    IsomorphicSlot
   }
 })
 export default class HelloWorld extends Vue {

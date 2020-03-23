@@ -5,8 +5,8 @@ module.exports = function (source, map) {
 
     const newSource = source
         .replace(
-            /<SlotFactory \/>/g,
-            '<slot></slot><SlotFactory \/>'
+            /<IsomorphicSlot \/>/g,
+            '<slot></slot><IsomorphicSlot \/>'
         );
 
     this.callback(

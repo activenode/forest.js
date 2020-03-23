@@ -2,13 +2,9 @@
 import { Component, Prop, Vue } from "vue-property-decorator";
 
 @Component
-export default class SlotFactory extends Vue {
+export default class IsomorphicSlot extends Vue {
   public render(h: Vue.CreateElement): Vue.VNode {
-    return h(
-      "slot", 
-      {}, 
-      []
-    );
+    return h("slot", {}, []);
   }
 }
 </script>
