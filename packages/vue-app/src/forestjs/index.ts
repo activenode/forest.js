@@ -23,11 +23,10 @@ export default {
         throw new Error(`Cannot redefine ${tagName}`);
       }
 
-      const slotReferenceId = uniqueId();
-
       const innerWrapperClassName = `wc-${tagName}`;
       const WrappedAnonComponent = {
         render (h: Vue.CreateElement) {
+          const slotReferenceId = uniqueId();
           const self = this as unknown as any;
           const $slotsDefault = self.$slots.default || [];
           const $slotsEdited = $slotsDefault.map((vnode: Vue.VNode) => {
@@ -35,18 +34,19 @@ export default {
             vnode.data.attrs = {
               ...vnode.data.attrs,
               unslotted: true,
-              slotref: slotReferenceId
+              slotref: slotReferenceId,
             };
 
             return vnode;
           });
 
-          console.log('$slotsEdited', $slotsEdited);
-
           return h(
             'div',
             {
-              class: innerWrapperClassName
+              class: innerWrapperClassName,
+              attrs: {
+                slotref: slotReferenceId,
+              }
             },
             [h(AnonComponent, {
               attrs: self.$attrs
@@ -85,6 +85,10 @@ export default {
               console.log('trying to hydrate');
               const hydrationTarget: Element = 
                 (this.querySelector(`.${innerWrapperClassName}`) as Element);
+
+              const slotref = hydrationTarget.getAttribute('slotref');
+              console.log('hydrationTarget', hydrationTarget);
+              console.log('slotref', slotref);
               //app.$mount(hydrationTarget, true);
             } else {
               // move all outside the shadowdom if something exists
