@@ -9,6 +9,12 @@ declare module 'vue/types/vue' {
 
 export default {
   install: (Vue: typeof _Vue) => {
+    const uniqueId = (function(){
+      let count = 0;
+      
+      return () => `${Math.floor(Math.random() * 1000000)}_${Date.now()}_${count++}`;
+    }());
+
     const RegistryMap: Map<string, Vue.Component> = new Map();
     const hasBrowserCapabilities = typeof window !== 'undefined' && typeof HTMLElement !== 'undefined';
 
@@ -17,6 +23,8 @@ export default {
         throw new Error(`Cannot redefine ${tagName}`);
       }
 
+      const slotReferenceId = uniqueId();
+
       const innerWrapperClassName = `wc-${tagName}`;
       const WrappedAnonComponent = {
         render (h: Vue.CreateElement) {
@@ -24,8 +32,12 @@ export default {
           const $slotsDefault = self.$slots.default || [];
           const $slotsEdited = $slotsDefault.map((vnode: Vue.VNode) => {
             vnode.data = vnode.data || {};
-            vnode.data.attrs = vnode.data.attrs || {};
-            vnode.data.attrs['unslotted'] = true;
+            vnode.data.attrs = {
+              ...vnode.data.attrs,
+              unslotted: true,
+              slotref: slotReferenceId
+            };
+
             return vnode;
           });
 
