@@ -1,6 +1,5 @@
 /* eslint-disable */
 import _Vue, { Component } from 'vue';
-import { VNode } from 'vue/types/umd';
 
 declare module 'vue/types/vue' {
   export interface VueConstructor   {
@@ -66,8 +65,9 @@ export default {
               console.log('trying to hydrate');
               const hydrationTarget: Element = 
                 (this.querySelector(`.${innerWrapperClassName}`) as Element);
-              app.$mount(hydrationTarget, true);
+              //app.$mount(hydrationTarget, true);
             } else {
+              // move all outside the shadowdom if something exists
               console.log('render fresh!');
               const ghost = document.createElement('div');
               this.appendChild(ghost);
@@ -83,8 +83,6 @@ export default {
         render (h: Vue.CreateElement) {
           const self = this as unknown as any;
           const $slotsDefault = self.$slots.default;
-
-          console.log('self.$attrs', );
           
           return h(
             tagName, 

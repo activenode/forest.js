@@ -1,16 +1,25 @@
 <template>
   <div class="hello">
-    <h1>{{ msg }}</h1>
-    <div class="slotwrapper">
-      <slot></slot>
+    <h1>{{ msg }} 123</h1>
+    <div class="slot-wrapper">
+      <SlotFactory />
     </div>
   </div>
 </template>
 
+<docs>
+  test
+</docs>
+
 <script lang="ts">
 import { Component, Prop, Vue } from "vue-property-decorator";
+import SlotFactory from "./SlotFactory.vue";
 
-@Component
+@Component({
+  components: {
+    SlotFactory
+  }
+})
 export default class HelloWorld extends Vue {
   @Prop() private msg!: string;
 }
@@ -18,7 +27,7 @@ export default class HelloWorld extends Vue {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-.slotwrapper {
+.slot-wrapper {
   padding: 5ex;
   margin: 2ex;
   background: gold;
