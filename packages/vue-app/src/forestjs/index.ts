@@ -21,7 +21,15 @@ export default {
       const WrappedAnonComponent = {
         render (h: Vue.CreateElement) {
           const self = this as unknown as any;
-          const $slotsDefault = self.$slots.default;
+          const $slotsDefault = self.$slots.default || [];
+          const $slotsEdited = $slotsDefault.map((vnode: Vue.VNode) => {
+            vnode.data = vnode.data || {};
+            vnode.data.attrs = vnode.data.attrs || {};
+            vnode.data.attrs['unslotted'] = true;
+            return vnode;
+          });
+
+          console.log('$slotsEdited', $slotsEdited);
 
           return h(
             'div',
@@ -30,7 +38,7 @@ export default {
             },
             [h(AnonComponent, {
               attrs: self.$attrs
-            }, $slotsDefault || [])], 
+            }, $slotsEdited)], 
           );
         }
       };
